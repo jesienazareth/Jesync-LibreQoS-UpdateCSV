@@ -9,7 +9,7 @@ jesync_static_device.json same path with your lebreqos directory.
 
 Guide on setting up your static devices
 
-The initial step involves installing the MikroTik-LibreQos-Integration and ensuring proper configuration. 
+The initial step involves installing the [MikroTik-LibreQos-Integration](https://github.com/Kintoyyy/MikroTik-LibreQos-Integration/blob/main/Installation.md) and ensuring proper configuration. 
 Verify that it is running smoothly before proceeding to replace the updatecsv.py file. Once everything is functioning correctly,
 proceed to modify the jesync_static_device.json file.
 To input the IP addresses of your static devices, 
