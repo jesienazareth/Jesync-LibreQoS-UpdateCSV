@@ -11,6 +11,50 @@ from functools import lru_cache
 import os
 import re
 
+# -------------------------------
+# Static Device Merge Helper Functions
+# -------------------------------
+CSV_FILE_PATH = 'ShapedDevices.csv'
+JSON_FILE_PATH = 'jesync_static_device.json'
+
+def read_csv_data(file_path):
+    """Read existing data from CSV into a dictionary."""
+    data = {}
+    if os.path.exists(file_path):
+        with open(file_path, mode='r', newline='') as csv_file:
+            reader = csv.DictReader(csv_file)
+            for row in reader:
+                # Adjust the key here if necessary. For example, use "Circuit Name" if that is your unique key.
+                data[row['Circuit Name']] = row
+    return data
+
+def read_json_data(file_path):
+    """Read static devices from JSON into a dictionary."""
+    if os.path.exists(file_path):
+        with open(file_path, mode='r') as json_file:
+            return json.load(json_file)
+    return {}
+
+def write_csv_data(file_path, data):
+    """Write data to CSV from a list of dictionaries."""
+    if data:
+        fieldnames = list(data[0].keys())
+        with open(file_path, mode='w', newline='') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(data)
+
+def merge_static_devices(existing_data, static_devices):
+    """Merge static devices into existing data without duplication."""
+    # Here we assume that static_devices is a dictionary with keys corresponding to your unique ID.
+    for device_id, device_info in static_devices.items():
+        existing_data[device_id] = device_info
+    return existing_data
+
+# -------------------------------
+# (Rest of your existing functions follow here)
+
+
 # Configuration
 CONFIG_JSON = 'config.json'  # JSON file containing router configuration
 SHAPED_DEVICES_CSV = 'ShapedDevices.csv'  # Output CSV file
@@ -555,7 +599,6 @@ def process_static_devices(existing_data):
 
     return static_codes, updated
 
-
 def main():
     """Main function to run the script."""
     logger.info("Starting to scan routers")
@@ -599,12 +642,12 @@ def main():
             any_updates = any_updates or static_updated
             
             # Merge static device entries every run to ensure they're always in the CSV.
-            for static_code in static_codes:
+            #for static_code in static_codes:
                 # Force re-add the static device entry from jesync_static_device.json
                 # (process_static_devices() already did this if needed)
                 # You could re-read the JSON here or simply rely on process_static_devices()
                 # which already ensures the static device is present.
-                pass  # This step is optional if process_static_devices() is handling it.
+             #   pass  # This step is optional if process_static_devices() is handling it.
                 
             # Add a "Static" parent node in network.json if any static devices exist.
             if static_codes:
