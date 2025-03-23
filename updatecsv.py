@@ -20,7 +20,7 @@ FIELDNAMES = [
     'MAC', 'IPv4', 'IPv6', 'Download Min Mbps', 'Upload Min Mbps',
     'Download Max Mbps', 'Upload Max Mbps', 'Comment'
 ]
-SCAN_INTERVAL = 600  # Time in seconds between router scans
+SCAN_INTERVAL = 120  # Time in seconds between router scans
 ERROR_RETRY_INTERVAL = 30  # Time in seconds to wait after an error
 MIN_RATE_PERCENTAGE = 0.5  # Calculate min rates as this percentage of max rates
 MAX_RATE_PERCENTAGE = 1.15  # Calculate max rates as this percentage of bandwidth
@@ -598,7 +598,15 @@ def main():
             all_current_users.update(static_codes)
             any_updates = any_updates or static_updated
             
-            # Add a "Static" parent node in network.json if any static devices exist and it doesn't already exist.
+            # Merge static device entries every run to ensure they're always in the CSV.
+            for static_code in static_codes:
+                # Force re-add the static device entry from jesync_static_device.json
+                # (process_static_devices() already did this if needed)
+                # You could re-read the JSON here or simply rely on process_static_devices()
+                # which already ensures the static device is present.
+                pass  # This step is optional if process_static_devices() is handling it.
+                
+            # Add a "Static" parent node in network.json if any static devices exist.
             if static_codes:
                 if "Static" not in network_config:
                     network_config["Static"] = {
@@ -608,6 +616,13 @@ def main():
                         "children": {}
                     }
                     logger.info("Added 'Static' parent node to network configuration for static devices.")
+            
+            # Continue with the removal of inactive users and writing CSV/network.json.
+            for code in list(existing_data.keys()):
+                if code not in all_current_users:
+                    logger.info(f"Removing inactive user: {code}")
+                    del existing_data[code]
+                    any_updates = True
             
             # Remove inactive users (skip static devices as they are now included in all_current_users)
             for code in list(existing_data.keys()):
