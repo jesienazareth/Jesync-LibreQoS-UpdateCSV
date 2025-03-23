@@ -15,3 +15,7 @@ proceed to modify the jesync_static_device.json file.
 To input the IP addresses of your static devices, 
 simply open the jesync_static_device.json file. You can add multiple devices by following the provided sample data. 
 After setting up the jesync_static_device.json file, upload it to your libreqos directory and remember to replace the previous updatecsv.py file.
+
+NOTE:
+Please refrain from replacing the Parent node "Static" in the jesync_static_devices.json file.
+All static devices rely on this node as their parent. Changing this will result in errors.
