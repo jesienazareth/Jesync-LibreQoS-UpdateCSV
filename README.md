@@ -6,3 +6,12 @@ the Python script eliminates the need for manual input of static IPs in the Shap
 you can now input static IPs manually without concern that the Mikrotik-LibreQos-Integration will remove your static device upon running.
 To implement this modification, simply replace your current updatecsv.py and include the additional file
 jesync_static_device.json same path with your lebreqos directory.
+
+Guide on setting up your static devices
+
+The initial step involves installing the MikroTik-LibreQos-Integration and ensuring proper configuration. 
+Verify that it is running smoothly before proceeding to replace the updatecsv.py file. Once everything is functioning correctly,
+proceed to modify the jesync_static_device.json file.
+To input the IP addresses of your static devices, 
+simply open the jesync_static_device.json file. You can add multiple devices by following the provided sample data. 
+After setting up the jesync_static_device.json file, upload it to your libreqos directory and remember to replace the previous updatecsv.py file.
