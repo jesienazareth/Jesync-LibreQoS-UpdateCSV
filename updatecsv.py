@@ -20,7 +20,7 @@ FIELDNAMES = [
     'MAC', 'IPv4', 'IPv6', 'Download Min Mbps', 'Upload Min Mbps',
     'Download Max Mbps', 'Upload Max Mbps', 'Comment'
 ]
-SCAN_INTERVAL = 120  # Time in seconds between router scans
+SCAN_INTERVAL = 600  # Time in seconds between router scans
 ERROR_RETRY_INTERVAL = 30  # Time in seconds to wait after an error
 MIN_RATE_PERCENTAGE = 0.5  # Calculate min rates as this percentage of max rates
 MAX_RATE_PERCENTAGE = 1.15  # Calculate max rates as this percentage of bandwidth
