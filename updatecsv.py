@@ -682,8 +682,8 @@ def main():
                 logger.info("Running LibreQoS update command...")
                 subprocess.run(["sudo", "/opt/libreqos/src/LibreQoS.py", "--updateonly"], check=True)
                 logger.info("LibreQoS update command executed successfully.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to execute LibreQoS update command: {e}")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to execute LibreQoS update command: {e}")
 
             else:
                 logger.info("No updates needed, CSV file remains unchanged.")
