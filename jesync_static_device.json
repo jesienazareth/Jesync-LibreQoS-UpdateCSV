@@ -1,28 +1,44 @@
-[
+{
+  "UseProfileBandwidth": true,
+  "StaticDevices": [
     {
-        "Circuit Name": "HS-Core",
-        "Device Name": "Core Switch",
-        "Parent Node": "Static",
-        "MAC": "AA:BB:CC:DD:EE:FF",
-        "IPv4": "192.168.0.1",
-        "IPv6": "2001:db8::1",
-        "Download Min Mbps": "100",
-        "Upload Min Mbps": "100",
-        "Download Max Mbps": "1000",
-        "Upload Max Mbps": "1000",
-        "Comment": "Core network device",
+      "Circuit Name": "Mikrotik-Core",
+      "Device Name": "Alpha-Device",
+      "Parent Node": "Main-Node",
+      "MAC": "",
+      "IPv4": "192.168.10.101",
+      "IPv6": "",
+      "Download Min Mbps": "50",
+      "Upload Min Mbps": "50",
+      "Download Max Mbps": "1000",
+      "Upload Max Mbps": "1000",
+      "Comment": "HS Core network device"
     },
     {
-        "Circuit Name": "Static-Device-2",
-        "Device Name": "Backup Router",
-        "Parent Node": "Static",
-        "MAC": "11:22:33:44:55:66",
-        "IPv4": "192.168.1.11",
-        "IPv6": "",
-        "Download Min Mbps": "30",
-        "Upload Min Mbps": "5",
-        "Download Max Mbps": "50",
-        "Upload Max Mbps": "10",
-        "Comment": "Backup router for redundancy",
+      "Circuit Name": "Mikrotik-AC",
+      "Device Name": "Beta-Device",
+      "Parent Node": "Edge-Node",
+      "MAC": "48:8F:5A:9C:34:C8",
+      "IPv4": "192.168.10.102",
+      "IPv6": "",
+      "Download Min Mbps": "50",
+      "Upload Min Mbps": "50",
+      "Download Max Mbps": "1000",
+      "Upload Max Mbps": "1000",
+      "Comment": "AC"
+    },
+    {
+      "Circuit Name": "Hotspot Server",
+      "Device Name": "Gamma-Device",
+      "Parent Node": "Edge-Node",
+      "MAC": "74:4D:28:B0:7A:63",
+      "IPv4": "192.168.10.103",
+      "IPv6": "",
+      "Download Min Mbps": "50",
+      "Upload Min Mbps": "50",
+      "Download Max Mbps": "1000",
+      "Upload Max Mbps": "1000",
+      "Comment": "AC Hex"
     }
-]
+  ]
+}
