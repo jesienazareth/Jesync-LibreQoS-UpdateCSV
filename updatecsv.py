@@ -26,8 +26,8 @@ FIELDNAMES = [
 ]
 SCAN_INTERVAL = 120                    # Seconds between router scans
 ERROR_RETRY_INTERVAL = 30              # Seconds to wait after an error
-MIN_RATE_PERCENTAGE = 0.5              # Minimum rate = 50% of max rate
-MAX_RATE_PERCENTAGE = 1.15             # Maximum rate = 115% of base value
+MIN_RATE_PERCENTAGE = 0.3              # Minimum rate = 50% of max rate
+MAX_RATE_PERCENTAGE = 1                # Maximum rate = 115% of base value
 ID_LENGTH = 8                         # Length of generated IDs
 DEFAULT_BANDWIDTH = 2000              # Default bandwidth for new routers in Mbps
 
