@@ -34,14 +34,7 @@ Reload the systemd daemon to apply the changes.
 sudo systemctl daemon-reload
 ```
 
-## Step 5: Remove the Script and Configuration Files
-
-Delete the script and configuration files from the target directory.
-
-```bash
-sudo rm -r /opt/libreqos/src/
-```
-## Step 7: Verify the Uninstallation
+## Step 5: Verify the Uninstallation
 
 Ensure that the service has been removed and the files have been deleted by checking the service status and listing the target directory.
 
