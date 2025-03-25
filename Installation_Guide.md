@@ -184,9 +184,6 @@ If you don’t need any global settings, you can simply list the devices:
 #### Static Devices:
 The script reads this file to get a list of static device entries. It then merges these entries into its device list, ensuring that the devices you manually define are always included in the final output.
 
-#### Global Bandwidth Option:
-The global setting `UseProfileBandwidth` tells the script whether to use the PPP profile's comment for bandwidth values (e.g., "20m/20m") for PPPoE devices. If this setting is `true`, the script overrides the default rate-limit values with the rx and tx values specified on the PPP profile. If it’s `false`, the script will use the default or configured rate-limit values.
-
 #### Custom Parent Nodes:
 The `Parent Node` field allows you to group your static devices under a custom name instead of being placed under a generic category. For example, you might set `"Parent Node": "CoreDevices"` or `"Parent Node": "BackupDevices"` to reflect the device's role in your network.
 
@@ -205,7 +202,6 @@ The `Parent Node` field allows you to group your static devices under a custom n
 
 ## Final Notes
 1. **Edit Carefully:** Always review and update your `jesync_static_device.json` file to match your actual network environment before running the script.
-2. **Naming Convention:** Ensure every "Circuit Name" starts with "Mikrotik" to maintain consistency.
 3. **Flexibility:** You can choose the file structure that best suits your needs. Option 1 provides a global setting along with a device list, while Option 2 is a simpler list of devices.
 
 This guide should help you understand and configure your `jesync_static_device.json` file for the LibreQoS UpdateCSV script. If you have any questions or need further assistance, please feel free to ask.
