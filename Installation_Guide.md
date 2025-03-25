@@ -1,4 +1,4 @@
-# Installation Guide: LibreQoS MikroTik PPP and Active Hotspot User Sync
+# Installation Guide: LibreQoS MikroTik PPPoE and Active Hotspot User Sync
 
 This guide will walk you through installing and setting up the LibreQoS MikroTik PPP and Active Hotspot User Sync script. The script synchronizes MikroTik PPP secrets (PPPoE users) and active hotspot users with a LibreQoS-compatible CSV file (`ShapedDevices.csv`). It continuously monitors your MikroTik routers for changes and updates the CSV file accordingly. The script also supports dynamic bandwidth override and custom parent node updates. It runs as a background service using systemd.
 
