@@ -1,21 +1,61 @@
-# jesync_qos_static_mod
-Mod for MikroTik-LibreQos-Integration adding Static IP
+# Release Notes – Bandwidth Override & Parent Node Update
 
-If you are a user of Libreqos and utilize the Mikrotik-LibreQos-Integration,
-the Python script eliminates the need for manual input of static IPs in the ShapedDevices.csv With my modification,
-you can now input static IPs manually without concern that the Mikrotik-LibreQos-Integration will remove your static device upon running.
-To implement this modification, simply replace your current updatecsv.py and include the additional file
-jesync_static_device.json same path with your libreqos directory.
+**Version:** 1.2.0  
+**Release Date:** 2025-03-25
 
-Guide on setting up your static devices
+## What’s New
 
-The initial step involves installing the [MikroTik-LibreQos-Integration](https://github.com/Kintoyyy/MikroTik-LibreQos-Integration/blob/main/Installation.md) and ensuring proper configuration. 
-Verify that it is running smoothly before proceeding to replace the updatecsv.py file. Once everything is functioning correctly,
-proceed to modify the jesync_static_device.json file.
-To input the IP addresses of your static devices, 
-simply open the jesync_static_device.json file. You can add multiple devices by following the provided sample data. 
-After setting up the jesync_static_device.json file, upload it to your libreqos directory and remember to replace the previous updatecsv.py file.
+### 1. Dynamic Bandwidth Override
 
-NOTE:
-Please refrain from replacing the Parent node "Static" in the jesync_static_devices.json file.
-All static devices rely on this node as their parent. Changing this will result in errors.
+We've added a new global option that lets the script use real-time bandwidth data from your MikroTik routers. When the new setting `UseProfileBandwidth` in your `jesync_static_device.json` file is enabled, the script will check the active PPP connection’s comment for a bandwidth value (like “20m/20m”). If it finds a valid value, that value will override the default bandwidth settings derived from the router profile. This means your devices can automatically adjust their bandwidth allocation based on live data, making network management a bit more responsive.
+
+### 2. Custom Parent Node for Static Devices
+
+Static devices are no longer forced into a default “Static” group. You can now specify a custom "Parent Node" for each static device directly in your `jesync_static_device.json` file. For example, you might want to group office routers under “CoreDevices” and backup routers under “BackupDevices.” The script will update your network configuration to include these custom parent nodes automatically. This update makes your network organization more intuitive and easier to manage.
+
+## How to Use
+
+### Update Your Configuration:
+
+1. Open your `jesync_static_device.json` file.
+2. Set `"UseProfileBandwidth": true` to enable dynamic bandwidth overrides for devices fetched via the API.
+3. Under `"StaticDevices"`, set the `"Parent Node"` field to your desired grouping (e.g., "CoreDevices" or "BackupDevices").
+
+#### Example:
+```json
+{
+  "UseProfileBandwidth": true,
+  "StaticDevices": [
+    {
+      "Circuit Name": "Static-Device-1",
+      "Device Name": "Office Router",
+      "Parent Node": "CoreDevices",
+      "MAC": "AA:BB:CC:DD:EE:FF",
+      "IPv4": "192.168.1.10",
+      "IPv6": "2001:db8::1",
+      "Comment": "Office router static device"
+    },
+    {
+      "Circuit Name": "Static-Device-2",
+      "Device Name": "Backup Router",
+      "Parent Node": "BackupDevices",
+      "MAC": "11:22:33:44:55:66",
+      "IPv4": "192.168.1.11",
+      "IPv6": "",
+      "Comment": "Backup router for redundancy"
+    }
+  ]
+}
+```
+
+### Deploy the Script:
+
+1. Follow the installation guide to move the updated files to `/opt/libreqos/src/`.
+2. Make sure your configuration files are edited before transferring.
+3. Set the proper file permissions so the script can read/write in `/opt/libreqos/src/`.
+
+### Run and Monitor:
+
+- Test the script by running it manually with the `--debug` flag.
+- Once verified, set up the systemd service to run the script automatically in the background.
+This update makes your network management smarter and more flexible. With dynamic bandwidth overrides, your devices can adjust based on real-time data from the router, and custom parent nodes allow you to better organize static devices according to your network’s unique structure. We hope these improvements make managing your LibreQoS environment easier and more intuitive.
