@@ -35,8 +35,8 @@ pipx install routeros_api
 Clone the Repository:
 
 ```bash
-git clone https://github.com/jesienazareth/jesync_qos_static_mod.git
-cd jesync_qos_static_mod
+git clone https://github.com/jesienazareth/Jesync-LibreQoS-UpdateCSV.git
+cd Jesync-LibreQoS-UpdateCSV
 ```
 
 Edit the Configuration Files:
