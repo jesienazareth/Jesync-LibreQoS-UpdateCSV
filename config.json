@@ -1,0 +1,55 @@
+{
+  "routers": [
+    {
+      "name": "Mikrotik Core",
+      "address": "192.168.10.12",
+      "port": 8728,
+      "username": "netadmin1",
+      "password": "alpha@2025",
+      "dhcp": {
+        "enabled": true,
+        "download_limit_mbps": 25,
+        "upload_limit_mbps": 25,
+        "dhcp_server": [
+          "dhcpA",
+          "dhcpB"
+        ]
+      },
+      "hotspot": {
+        "enabled": false,
+        "include_mac": false,
+        "download_limit_mbps": 15,
+        "upload_limit_mbps": 15
+      },
+      "pppoe": {
+        "enabled": false,
+        "per_plan_node": false
+      }
+    },
+    {
+      "name": "Mikrotik AC",
+      "address": "10.0.5.22",
+      "port": 8728,
+      "username": "operator2",
+      "password": "bravo#404",
+      "dhcp": {
+        "enabled": false,
+        "download_limit_mbps": 100,
+        "upload_limit_mbps": 100,
+        "dhcp_server": [
+          "dhcpMain"
+        ]
+      },
+      "hotspot": {
+        "enabled": true,
+        "include_mac": true,
+        "download_limit_mbps": 20,
+        "upload_limit_mbps": 20
+      },
+      "pppoe": {
+        "enabled": true,
+        "per_plan_node": true
+      }
+    }
+  ]
+}
