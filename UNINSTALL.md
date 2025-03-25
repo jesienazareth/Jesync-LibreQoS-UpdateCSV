@@ -24,6 +24,9 @@ Delete the systemd service file to completely remove the service configuration.
 
 ```bash
 sudo rm /etc/systemd/system/updatecsv.service
+sudo rm /opt/libreqos/src/updatecsv.py
+sudo rm /opt/libreqos/src/config.json
+sudo rm /opt/libreqos/src/jesync_static_device.json
 ```
 
 ## Step 4: Reload Systemd Daemon
