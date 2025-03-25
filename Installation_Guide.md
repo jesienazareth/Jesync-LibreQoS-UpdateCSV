@@ -44,7 +44,8 @@ Always update your configuration files (`config.json` and `jesync_static_device.
 Edit the Configuration Files:
 - `config.json`: Update with your MikroTik router IP addresses, ports, credentials, and other settings.
 - `jesync_static_device.json`: Adjust your static device entries, global settings (e.g., `"UseProfileBandwidth": true`), and custom parent node values.
-
+### Setup your Mirkrotik Device Credential and config.json
+- https://github.com/jesienazareth/Jesync-LibreQoS-UpdateCSV/blob/main/mikrotik_Credential_Script.md
 > Note: Make sure these files are edited to match your environment before proceeding with the installation.
 
 ## Step 3: Run the Installation Script
