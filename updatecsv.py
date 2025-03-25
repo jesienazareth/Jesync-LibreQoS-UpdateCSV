@@ -251,6 +251,7 @@ def parse_rate_limit(rate_limit):
 def get_profile_rate_limits(api, profile_name, resource_path):
     """
     Fetch rate limits for a profile from the specified resource path.
+    **Modified:** This version now uses the PPP profile's comment field exclusively to determine the bandwidth.
     """
     try:
         profiles = api.get_resource(resource_path).get(name=profile_name)
@@ -258,13 +259,12 @@ def get_profile_rate_limits(api, profile_name, resource_path):
             return '50M/50M'
         
         profile = profiles[0]
-        rate_limit = profile.get('rate-limit', '')
-        if not rate_limit:
-            rate_limit = profile.get('comment', '50M/50M')
-        if not rate_limit:
-            return '50M/50M'
-        
-        return rate_limit
+        # Instead of using 'rate-limit', we now use the profile's comment field for bandwidth.
+        comment_value = profile.get('comment', '')
+        if comment_value:
+            return comment_value
+        # Fallback to a default value if no comment is set.
+        return '50M/50M'
     
     except Exception as e:
         logger.error(f"Failed to get profile rate limits for {profile_name}: {e}")
@@ -411,17 +411,12 @@ def process_pppoe_users(api, router, existing_data, network_config):
             logger.info(f"Created new entry for PPPoE user: {code} with IDs: {entry['Circuit ID']}/{entry['Device ID']}")
             updated = True
         
-        # Get rate limit from profile first
+        # Get rate limit from PPP profile's comment (modified behavior)
         profile_name = secret.get('profile', 'default')
         rate_limit = get_profile_rate_limits(api, profile_name, '/ppp/profile')
         
-        # If global setting is true, try to override with active connection comment
-        if USE_PROFILE_BANDWIDTH:
-            comment_value = secret.get("comment", "")
-            bandwidth_override = get_bandwidth_from_comment(comment_value)
-            if bandwidth_override:
-                rate_limit = bandwidth_override
-                logger.info(f"Overriding rate limit for {code} with value from comment: {rate_limit}")
+        # Optionally, you can log the rate limit value
+        logger.info(f"Using PPP profile comment rate limit for {code}: {rate_limit}")
         
         rx, tx = parse_rate_limit(rate_limit)
         rx_max, tx_max = calculate_max_rates(rx, tx)
@@ -589,8 +584,7 @@ def process_static_devices(existing_data):
     """
     try:
         data = read_json_data(JSON_FILE_PATH)
-        # If the JSON is a dict, then extract the static devices list;
-        # otherwise, assume the entire file is a list of static devices.
+        # If the JSON is a dict, then extract the static devices list; otherwise, assume it's a list.
         if isinstance(data, dict):
             static_devices = data.get("StaticDevices", [])
         else:
