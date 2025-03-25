@@ -38,6 +38,8 @@ Clone the Repository:
 git clone https://github.com/jesienazareth/Jesync-LibreQoS-UpdateCSV.git
 cd Jesync-LibreQoS-UpdateCSV
 ```
+### Edit Before Installation:
+Always update your configuration files (`config.json` and `jesync_static_device.json`) to match your network environment before running the installation script.
 
 Edit the Configuration Files:
 - `config.json`: Update with your MikroTik router IP addresses, ports, credentials, and other settings.
@@ -100,9 +102,6 @@ journalctl -u updatecsv.service -f
 ```
 
 ## Final Notes
-
-### Edit Before Installation:
-Always update your configuration files (`config.json` and `jesync_static_device.json`) to match your network environment before running the installation script.
 
 ### Dependencies:
 Ensure pipx and `routeros_api` are installed as described in Step 1.
