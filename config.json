@@ -4,8 +4,8 @@
       "name": "Mikrotik Core",
       "address": "192.168.10.12",
       "port": 8728,
-      "username": "netadmin1",
-      "password": "alpha@2025",
+      "username": "LibreQos",
+      "password": "<Strong Password>",
       "dhcp": {
         "enabled": true,
         "download_limit_mbps": 25,
@@ -30,8 +30,8 @@
       "name": "Mikrotik AC",
       "address": "10.0.5.22",
       "port": 8728,
-      "username": "operator2",
-      "password": "bravo#404",
+      "username": "LibreQos",
+      "password": "<Strong Password>",
       "dhcp": {
         "enabled": false,
         "download_limit_mbps": 100,
