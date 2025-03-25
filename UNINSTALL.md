@@ -41,15 +41,6 @@ Delete the script and configuration files from the target directory.
 ```bash
 sudo rm -r /opt/libreqos/src/
 ```
-
-## Step 6: Uninstall Python Dependencies
-
-If you installed the `routeros_api` Python library using pipx, you can uninstall it with the following command:
-
-```bash
-pipx uninstall routeros_api
-```
-
 ## Step 7: Verify the Uninstallation
 
 Ensure that the service has been removed and the files have been deleted by checking the service status and listing the target directory.
