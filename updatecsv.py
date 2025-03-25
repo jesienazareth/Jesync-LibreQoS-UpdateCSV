@@ -24,12 +24,12 @@ def read_csv_data(file_path):
         with open(file_path, mode='r', newline='') as csv_file:
             reader = csv.DictReader(csv_file)
             for row in reader:
-                # Adjust the key here if necessary. For example, use "Circuit Name" if that is your unique key.
+                # Using "Circuit Name" as the unique key
                 data[row['Circuit Name']] = row
     return data
 
 def read_json_data(file_path):
-    """Read static devices from JSON into a dictionary."""
+    """Read static devices from JSON into a dictionary or list."""
     if os.path.exists(file_path):
         with open(file_path, mode='r') as json_file:
             return json.load(json_file)
@@ -46,16 +46,13 @@ def write_csv_data(file_path, data):
 
 def merge_static_devices(existing_data, static_devices):
     """Merge static devices into existing data without duplication."""
-    # Here we assume that static_devices is a dictionary with keys corresponding to your unique ID.
     for device_id, device_info in static_devices.items():
         existing_data[device_id] = device_info
     return existing_data
 
 # -------------------------------
-# (Rest of your existing functions follow here)
-
-
-# Configuration
+# Configuration and Utility Functions
+# -------------------------------
 CONFIG_JSON = 'config.json'  # JSON file containing router configuration
 SHAPED_DEVICES_CSV = 'ShapedDevices.csv'  # Output CSV file
 NETWORK_JSON = 'network.json'  # Network configuration JSON file
@@ -348,6 +345,33 @@ def update_entry_values(entry, new_values):
             changed = True
     return changed
 
+# --- New helper function for bandwidth override from comment ---
+def get_bandwidth_from_comment(comment):
+    """
+    Check if the comment is in the format "20m/20m" (or similar) and return that string.
+    Returns None if the comment does not match.
+    """
+    pattern = r'^\s*(\d+(?:\.\d+)?[kKmMgG])\s*/\s*(\d+(?:\.\d+)?[kKmMgG])\s*$'
+    m = re.match(pattern, comment)
+    if m:
+        return f"{m.group(1)}/{m.group(2)}"
+    return None
+
+# --- New helper function to get global bandwidth setting ---
+def get_global_bandwidth_setting():
+    """
+    Read the global "UseProfileBandwidth" setting from jesync_static_device.json.
+    Assumes the JSON is a dict with a key "UseProfileBandwidth". If not found or error, returns False.
+    """
+    try:
+        data = read_json_data(JSON_FILE_PATH)
+        if isinstance(data, dict):
+            return data.get("UseProfileBandwidth", False)
+        return False
+    except Exception as e:
+        logger.warning(f"Could not read global bandwidth setting: {e}")
+        return False
+
 def process_pppoe_users(api, router, existing_data, network_config):
     """Process PPPoE users from a router."""
     if not router.get('pppoe', {}).get('enabled', False):
@@ -367,6 +391,9 @@ def process_pppoe_users(api, router, existing_data, network_config):
         if name in active and 'address' in active[name]:
             active_secrets[name] = {**data, 'address': active[name]['address']}
     
+    # Get global setting for using profile bandwidth override.
+    USE_PROFILE_BANDWIDTH = get_global_bandwidth_setting()
+    
     for code, secret in active_secrets.items():
         current_users.add(code)
         
@@ -384,8 +411,18 @@ def process_pppoe_users(api, router, existing_data, network_config):
             logger.info(f"Created new entry for PPPoE user: {code} with IDs: {entry['Circuit ID']}/{entry['Device ID']}")
             updated = True
         
+        # Get rate limit from profile first
         profile_name = secret.get('profile', 'default')
         rate_limit = get_profile_rate_limits(api, profile_name, '/ppp/profile')
+        
+        # If global setting is true, try to override with active connection comment
+        if USE_PROFILE_BANDWIDTH:
+            comment_value = secret.get("comment", "")
+            bandwidth_override = get_bandwidth_from_comment(comment_value)
+            if bandwidth_override:
+                rate_limit = bandwidth_override
+                logger.info(f"Overriding rate limit for {code} with value from comment: {rate_limit}")
+        
         rx, tx = parse_rate_limit(rate_limit)
         rx_max, tx_max = calculate_max_rates(rx, tx)
         rx_min, tx_min = calculate_min_rates(rx_max, tx_max)
@@ -546,31 +583,39 @@ def process_dhcp_leases(api, router, existing_data, network_config):
 def process_static_devices(existing_data):
     """
     Process static devices from jesync_static_device.json and update the existing_data dict.
-    The JSON file should contain a list of dictionaries with keys corresponding to FIELDNAMES.
-    Returns a tuple (set_of_static_codes, updated_flag).
+    The JSON file should contain a dict with a global setting "UseProfileBandwidth" and a "StaticDevices" array.
+    Each static device entry can specify a manual parent node via the "Parent Node" field.
+    Returns a tuple (set_of_static_codes, set_of_static_parent_nodes, updated_flag).
     """
     try:
-        with open("jesync_static_device.json", "r") as f:
-            static_devices = json.load(f)
+        data = read_json_data(JSON_FILE_PATH)
+        # If the JSON is a dict, then extract the static devices list;
+        # otherwise, assume the entire file is a list of static devices.
+        if isinstance(data, dict):
+            static_devices = data.get("StaticDevices", [])
+        else:
+            static_devices = data
         logger.info(f"Loaded {len(static_devices)} static devices from jesync_static_device.json")
-    except FileNotFoundError:
-        logger.info("Static devices file jesync_static_device.json not found. Skipping static devices processing.")
-        return set(), False
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decoding jesync_static_device.json: {e}")
-        return set(), False
+    except Exception as e:
+        logger.error(f"Error processing static devices file: {e}")
+        return set(), set(), False
 
     updated = False
     static_codes = set()
+    static_parent_nodes = set()
 
     for device in static_devices:
-        # Use 'Circuit Name' as the unique key to identify each static device entry
         circuit_name = device.get("Circuit Name")
         if not circuit_name:
             logger.warning("Skipping static device entry without 'Circuit Name'")
             continue
 
-        static_codes.add(circuit_name)  # Add to static codes set
+        static_codes.add(circuit_name)
+
+        # Use manual input for parent node if provided; otherwise, default to "Static"
+        parent_node_manual = device.get("Parent Node", "Static")
+        static_parent_nodes.add(parent_node_manual)
+        device["Parent Node"] = parent_node_manual  # Ensure the device reflects the manual input
 
         if circuit_name in existing_data:
             entry = existing_data[circuit_name]
@@ -583,7 +628,7 @@ def process_static_devices(existing_data):
                 'Device ID': generate_short_id(),
                 'Circuit Name': circuit_name,
                 'Device Name': device.get("Device Name", circuit_name),
-                'Parent Node': device.get("Parent Node", "Static"),
+                'Parent Node': parent_node_manual,
                 'MAC': device.get("MAC", ""),
                 'IPv4': device.get("IPv4", ""),
                 'IPv6': device.get("IPv6", ""),
@@ -597,7 +642,7 @@ def process_static_devices(existing_data):
             logger.info(f"Added static device entry: {circuit_name}")
             updated = True
 
-    return static_codes, updated
+    return static_codes, static_parent_nodes, updated
 
 def main():
     """Main function to run the script."""
@@ -637,37 +682,22 @@ def main():
                     logger.error(f"Error processing router {router['name']}: {e}")
             
             # Process static devices from jesync_static_device.json
-            static_codes, static_updated = process_static_devices(existing_data)
+            static_codes, static_parent_nodes, static_updated = process_static_devices(existing_data)
             all_current_users.update(static_codes)
             any_updates = any_updates or static_updated
             
-            # Merge static device entries every run to ensure they're always in the CSV.
-            #for static_code in static_codes:
-                # Force re-add the static device entry from jesync_static_device.json
-                # (process_static_devices() already did this if needed)
-                # You could re-read the JSON here or simply rely on process_static_devices()
-                # which already ensures the static device is present.
-             #   pass  # This step is optional if process_static_devices() is handling it.
-                
-            # Add a "Static" parent node in network.json if any static devices exist.
-            if static_codes:
-                if "Static" not in network_config:
-                    network_config["Static"] = {
+            # Update network configuration for each static parent node specified in the JSON.
+            for parent in static_parent_nodes:
+                if parent not in network_config:
+                    network_config[parent] = {
                         "downloadBandwidthMbps": DEFAULT_BANDWIDTH,
                         "uploadBandwidthMbps": DEFAULT_BANDWIDTH,
                         "type": "static",
                         "children": {}
                     }
-                    logger.info("Added 'Static' parent node to network configuration for static devices.")
+                    logger.info(f"Added '{parent}' parent node to network configuration for static devices.")
             
-            # Continue with the removal of inactive users and writing CSV/network.json.
-            for code in list(existing_data.keys()):
-                if code not in all_current_users:
-                    logger.info(f"Removing inactive user: {code}")
-                    del existing_data[code]
-                    any_updates = True
-            
-            # Remove inactive users (skip static devices as they are now included in all_current_users)
+            # Remove inactive users (static devices are preserved because they're in all_current_users)
             for code in list(existing_data.keys()):
                 if code not in all_current_users:
                     logger.info(f"Removing inactive user: {code}")
@@ -684,10 +714,7 @@ def main():
                 logger.info("LibreQoS update command executed successfully.")
             except subprocess.CalledProcessError as e:
                 logger.error(f"Failed to execute LibreQoS update command: {e}")
-
-            else:
-                logger.info("No updates needed, CSV file remains unchanged.")
-            
+    
             logger.info(f"Completed scan of {len(routers)} routers. Waiting {SCAN_INTERVAL} seconds before next scan.")
             time.sleep(SCAN_INTERVAL)
             
