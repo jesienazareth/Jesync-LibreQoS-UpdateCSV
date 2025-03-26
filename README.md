@@ -2,6 +2,11 @@
 
 Welcome to the Jesync-LibreQoS-UpdateCSV repository. This Python script synchronizes MikroTik router data—specifically PPP secrets (PPPoE users) and active hotspot users—with a LibreQoS ShapeDevices CSV file (`ShapedDevices.csv`). The script continuously monitors your routers for changes and automatically updates your network configuration, ensuring your bandwidth plans are kept up to date.
 
+## Credits and Acknowledgements
+
+I would like to extend my heartfelt thanks to Kent Rato and Sharknet ICT for their invaluable contributions to the original source code, which has been instrumental in the development of this script. My work is a revision and enhancement of their outstanding efforts.
+
+
 ## Features
 
 ### Dynamic Device Synchronization:
