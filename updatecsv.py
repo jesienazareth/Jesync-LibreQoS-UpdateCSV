@@ -26,8 +26,8 @@ FIELDNAMES = [
 ]
 SCAN_INTERVAL = 120                    # Seconds between router scans
 ERROR_RETRY_INTERVAL = 30              # Seconds to wait after an error
-MIN_RATE_PERCENTAGE = 0.3              # Minimum rate = 50% of max rate
-MAX_RATE_PERCENTAGE = 1                # Maximum rate = 115% of base value
+MIN_RATE_PERCENTAGE = 0.3              # Minimum rate = 30% of max rate
+MAX_RATE_PERCENTAGE = 1                # Maximum rate = 100% of base value
 ID_LENGTH = 8                         # Length of generated IDs
 DEFAULT_BANDWIDTH = 2000              # Default bandwidth for new routers in Mbps
 
@@ -246,7 +246,7 @@ def parse_rate_limit(rate_limit):
 def calculate_max_rates(rx, tx):
     """
     Calculate maximum rates using MAX_RATE_PERCENTAGE.
-    For example, if rx is 100 and MAX_RATE_PERCENTAGE is 1.15, max rate becomes 115.
+    For example, if rx is 100 and MAX_RATE_PERCENTAGE is 1, max rate remains 100.
     """
     rx_float = float(rx) if rx.replace('.', '', 1).isdigit() else 0
     tx_float = float(tx) if tx.replace('.', '', 1).isdigit() else 0
@@ -259,7 +259,7 @@ def calculate_max_rates(rx, tx):
 def calculate_min_rates(max_rx, max_tx):
     """
     Calculate minimum rates using MIN_RATE_PERCENTAGE.
-    For example, if max rate is 100 and MIN_RATE_PERCENTAGE is 0.5, min rate becomes 50.
+    For example, if max rate is 100 and MIN_RATE_PERCENTAGE is 0.3, min rate becomes 30.
     """
     rx_float = float(max_rx) if max_rx.replace('.', '', 1).isdigit() else 0
     tx_float = float(max_tx) if max_tx.replace('.', '', 1).isdigit() else 0
@@ -275,17 +275,36 @@ def calculate_min_rates(max_rx, max_tx):
 def get_profile_rate_limits(api, profile_name, resource_path):
     """
     Fetch rate limits for a profile from the specified resource path.
-    Modified: This version uses the PPP profile's comment field to determine the bandwidth.
+    When 'UseProfileBandwidth' is true, it will use the profile's 'rate-limit' field.
     """
     try:
         profiles = api.get_resource(resource_path).get(name=profile_name)
         if not profiles:
             return '50M/50M'
         profile = profiles[0]
-        rate_limit = profile.get('comment', '50M/50M')
+        # Use the rate-limit field instead of the comment field.
+        rate_limit = profile.get('rate-limit', '50M/50M')
         return rate_limit
     except Exception as e:
         logger.error(f"Failed to get profile rate limits for {profile_name}: {e}")
+        return '50M/50M'
+
+def get_profile_rate_limits_comment(api, profile_name, resource_path):
+    """
+    Fetch rate limits for a profile using the profile's comment field.
+    Sample rate-limit in comment: "100m/100m".
+    Fallback: If no rate-limit is found in the comment field, defaults to "50M/50M".
+    """
+    try:
+        profiles = api.get_resource(resource_path).get(name=profile_name)
+        if not profiles:
+            return '50M/50M'
+        profile = profiles[0]
+        # Use the comment field instead of the rate-limit field.
+        rate_limit = profile.get('comment', '50M/50M')
+        return rate_limit
+    except Exception as e:
+        logger.error(f"Failed to get profile rate limits (comment) for {profile_name}: {e}")
         return '50M/50M'
 
 # =============================================================================
@@ -380,12 +399,13 @@ def process_pppoe_users(api, router, existing_data, network_config):
 
         profile_name = secret.get('profile', 'default')
         if USE_PROFILE_BANDWIDTH:
-            # Use PPP profile's comment as the rate limit (e.g., "20m/20m")
+            # When true, use the PPP profile's actual rate-limit field.
             rate_limit = get_profile_rate_limits(api, profile_name, '/ppp/profile')
-            logger.info(f"Using PPP profile comment rate limit for {code}: {rate_limit}")
+            logger.info(f"Using PPP profile rate-limit for {code}: {rate_limit}")
         else:
-            rate_limit = secret.get('rate-limit', '50M/50M')
-            logger.info(f"Using PPP secret rate-limit for {code}: {rate_limit}")
+            # When false, use the profile's comment field for rate-limit.
+            rate_limit = get_profile_rate_limits_comment(api, profile_name, '/ppp/profile')
+            logger.info(f"Using PPP profile comment rate-limit for {code}: {rate_limit}")
 
         rx, tx = parse_rate_limit(rate_limit)
         rx_max, tx_max = calculate_max_rates(rx, tx)
