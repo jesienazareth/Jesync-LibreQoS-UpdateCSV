@@ -1,0 +1,38 @@
+{
+  "PPPOE-Server1": {
+    "downloadBandwidthMbps": 2000,
+    "uploadBandwidthMbps": 2000,
+    "type": "site",
+    "children": {}
+  },
+  "PPPOE-SERVER2": {
+    "downloadBandwidthMbps": 2000,
+    "uploadBandwidthMbps": 2000,
+    "type": "site",
+    "children": {}
+  },
+  "PPPOE-SERVER3": {
+    "downloadBandwidthMbps": 2000,
+    "uploadBandwidthMbps": 2000,
+    "type": "site",
+    "children": {}
+  },
+  "HS-Core1": {
+    "downloadBandwidthMbps": 1000,
+    "uploadBandwidthMbps": 1000,
+    "type": "site",
+    "children": {}
+  },
+  "HS-Core2": {
+    "downloadBandwidthMbps": 1000,
+    "uploadBandwidthMbps": 1000,
+    "type": "site",
+    "children": {}
+  },
+  "Main Router": {
+    "downloadBandwidthMbps": 1000,
+    "uploadBandwidthMbps": 1000,
+    "type": "site",
+    "children": {}
+  }
+}
