@@ -119,9 +119,9 @@ def get_profile_rate_limits(api, profile_name):
 def get_manual_pppoe_parents(network_config):
     return sorted([key for key in network_config if key.startswith("PPPOE-")])
 
-def process_pppoe_users(api, router, existing_data, network_config, manual_parents=None):
+def process_pppoe_users(api, router, existing_data, network_config, manual_parents=None, global_index=0):
     if not router.get("pppoe", {}).get("enabled"):
-        return set(), False
+        return set(), False, 0
 
     current_users = set()
     updated = False
@@ -132,10 +132,10 @@ def process_pppoe_users(api, router, existing_data, network_config, manual_paren
     active_users = {name_: {**s, "address": active[name_]["address"]}
                     for name_, s in secrets.items() if name_ in active and "address" in active[name_]}
 
-    user_list = list(active_users.items())
     manual_count = len(manual_parents) if manual_parents else 0
+    index_offset = global_index
 
-    for index, (code, secret) in enumerate(user_list):
+    for offset, (code, secret) in enumerate(active_users.items()):
         current_users.add(code)
         profile_name = secret.get("profile", "default")
         rate_limit = get_profile_rate_limits(api, profile_name)
@@ -144,7 +144,7 @@ def process_pppoe_users(api, router, existing_data, network_config, manual_paren
         rx_min, tx_min = calculate_min_rates(rx_max, tx_max)
 
         if router.get("parent_manual", False) and manual_parents:
-            parent_node = manual_parents[index % manual_count]
+            parent_node = manual_parents[(index_offset + offset) % manual_count]
         elif per_plan:
             parent_node = f"PLAN-{profile_name}-{name}"
             if parent_node not in network_config.get(name, {}).get("children", {}):
@@ -174,7 +174,7 @@ def process_pppoe_users(api, router, existing_data, network_config, manual_paren
                 "Upload Min Mbps": tx_min
             }
             updated = True
-    return current_users, updated
+    return current_users, updated, len(active_users)
 
 def process_hotspot_users(api, router, existing_data):
     if not router.get("hotspot", {}).get("enabled"):
@@ -223,13 +223,20 @@ def main():
 
             all_users = set()
             updated = False
+            pppoe_counter = 0
 
             for router in routers:
                 api = connect_to_router(router)
                 if not api:
                     continue
 
-                pppoe_users, ppp_updated = process_pppoe_users(api, router, shaped_data, network_config, manual_parents if router.get("parent_manual") else None)
+                pppoe_users, ppp_updated, count = process_pppoe_users(
+                    api, router, shaped_data, network_config,
+                    manual_parents if router.get("parent_manual") else None,
+                    pppoe_counter
+                )
+                pppoe_counter += count
+
                 hs_users, hs_updated = process_hotspot_users(api, router, shaped_data)
 
                 all_users |= pppoe_users | hs_users
