@@ -13,7 +13,7 @@ fi
 
 # Define installation paths and filenames
 TARGET_DIR="/opt/libreqos/src"
-FILES=("config.json" "jesync_static_device.json" "updatecsv.py")
+FILES=("config.json" "network.json" "jesync_static_device.json" "updatecsv.py")
 SERVICE_FILE="/etc/systemd/system/updatecsv.service"
 
 echo "Creating target directory $TARGET_DIR ..."
