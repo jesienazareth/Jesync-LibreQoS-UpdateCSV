@@ -116,10 +116,42 @@ def get_profile_rate_limits(api, profile_name):
         pass
     return '50M/50M'
 
-def get_manual_pppoe_parents(network_config):
-    return sorted([key for key in network_config if key.startswith("PPPOE-")])
+def update_network_json(routers):
+    network_config = read_json_data(NETWORK_JSON)
+    updated = False
+    for router in routers:
+        name = router['name']
+        if name not in network_config:
+            network_config[name] = {
+                "downloadBandwidthMbps": DEFAULT_BANDWIDTH,
+                "uploadBandwidthMbps": DEFAULT_BANDWIDTH,
+                "type": "site",
+                "children": {}
+            }
+            updated = True
+        children = network_config[name].get("children", {})
+        if router.get("pppoe", {}).get("enabled") and not any(c.startswith("PPP-") for c in children):
+            children[f"PPP-{name}"] = {
+                "downloadBandwidthMbps": DEFAULT_BANDWIDTH,
+                "uploadBandwidthMbps": DEFAULT_BANDWIDTH,
+                "type": "site",
+                "children": {}
+            }
+            updated = True
+        if router.get("hotspot", {}).get("enabled") and not any(c.startswith("HS-") for c in children):
+            children[f"HS-{name}"] = {
+                "downloadBandwidthMbps": DEFAULT_BANDWIDTH,
+                "uploadBandwidthMbps": DEFAULT_BANDWIDTH,
+                "type": "site",
+                "children": {}
+            }
+            updated = True
+        network_config[name]["children"] = children
+    if updated:
+        write_json_data(NETWORK_JSON, network_config)
+    return network_config
 
-def process_pppoe_users(api, router, existing_data, network_config, manual_parents=None):
+def process_pppoe_users(api, router, existing_data, network_config):
     if not router.get("pppoe", {}).get("enabled"):
         return set(), False
 
@@ -127,36 +159,32 @@ def process_pppoe_users(api, router, existing_data, network_config, manual_paren
     updated = False
     name = router["name"]
     per_plan = router.get("pppoe", {}).get("per_plan_node", False)
+
     secrets = {s["name"]: s for s in api.get_resource("/ppp/secret").get() if "name" in s}
     active = {a["name"]: a for a in api.get_resource("/ppp/active").get() if "name" in a}
-    active_users = {name_: {**s, "address": active[name_]["address"]}
-                    for name_, s in secrets.items() if name_ in active and "address" in active[name_]}
 
-    user_list = list(active_users.items())
-    manual_count = len(manual_parents) if manual_parents else 0
+    active_users = {}
+    for name_, s in secrets.items():
+        if name_ in active and "address" in active[name_]:
+            active_users[name_] = {**s, "address": active[name_]["address"]}
 
-    for index, (code, secret) in enumerate(user_list):
+    for code, secret in active_users.items():
         current_users.add(code)
         profile_name = secret.get("profile", "default")
         rate_limit = get_profile_rate_limits(api, profile_name)
         rx, tx = parse_rate_limit(rate_limit)
         rx_max, tx_max = calculate_max_rates(rx, tx)
         rx_min, tx_min = calculate_min_rates(rx_max, tx_max)
-
-        if router.get("parent_manual", False) and manual_parents:
-            parent_node = manual_parents[index % manual_count]
-        elif per_plan:
+        parent_node = f"PPP-{name}"
+        if per_plan:
             parent_node = f"PLAN-{profile_name}-{name}"
-            if parent_node not in network_config.get(name, {}).get("children", {}):
-                network_config[name].setdefault("children", {})[parent_node] = {
+            if parent_node not in network_config[name].get("children", {}):
+                network_config[name]["children"][parent_node] = {
                     "downloadBandwidthMbps": DEFAULT_BANDWIDTH,
                     "uploadBandwidthMbps": DEFAULT_BANDWIDTH,
                     "type": "plan",
                     "children": {}
                 }
-        else:
-            parent_node = f"PPP-{name}"
-
         if code not in existing_data:
             existing_data[code] = {
                 "Circuit ID": generate_short_id(),
@@ -216,11 +244,8 @@ def main():
     while True:
         try:
             shaped_data = read_shaped_devices_csv()
-            config_data = read_json_data(CONFIG_JSON)
-            routers = config_data.get("routers", [])
-            network_config = read_json_data(NETWORK_JSON)
-            manual_parents = get_manual_pppoe_parents(network_config)
-
+            routers = read_json_data(CONFIG_JSON).get("routers", [])
+            network_config = update_network_json(routers)
             all_users = set()
             updated = False
 
@@ -228,10 +253,8 @@ def main():
                 api = connect_to_router(router)
                 if not api:
                     continue
-
-                pppoe_users, ppp_updated = process_pppoe_users(api, router, shaped_data, network_config, manual_parents if router.get("parent_manual") else None)
+                pppoe_users, ppp_updated = process_pppoe_users(api, router, shaped_data, network_config)
                 hs_users, hs_updated = process_hotspot_users(api, router, shaped_data)
-
                 all_users |= pppoe_users | hs_users
                 updated |= ppp_updated or hs_updated
 
