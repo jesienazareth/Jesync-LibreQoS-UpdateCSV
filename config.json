@@ -1,54 +1,21 @@
 {
   "routers": [
     {
-      "name": "Mikrotik Core",
-      "address": "192.168.10.12",
+      "name": "Main Router",
+      "address": "192.168.88.1",
       "port": 8728,
-      "username": "LibreQos",
-      "password": "<Strong Password>",
-      "dhcp": {
-        "enabled": true,
-        "download_limit_mbps": 25,
-        "upload_limit_mbps": 25,
-        "dhcp_server": [
-          "dhcpA",
-          "dhcpB"
-        ]
-      },
-      "hotspot": {
-        "enabled": false,
-        "include_mac": false,
-        "download_limit_mbps": 15,
-        "upload_limit_mbps": 15
-      },
+      "username": "admin",
+      "password": "yourpassword",
+      "parent_manual": true,
       "pppoe": {
-        "enabled": false,
+        "enabled": true,
         "per_plan_node": false
-      }
-    },
-    {
-      "name": "Mikrotik AC",
-      "address": "10.0.5.22",
-      "port": 8728,
-      "username": "LibreQos",
-      "password": "<Strong Password>",
-      "dhcp": {
-        "enabled": false,
-        "download_limit_mbps": 100,
-        "upload_limit_mbps": 100,
-        "dhcp_server": [
-          "dhcpMain"
-        ]
       },
       "hotspot": {
         "enabled": true,
         "include_mac": true,
-        "download_limit_mbps": 20,
-        "upload_limit_mbps": 20
-      },
-      "pppoe": {
-        "enabled": true,
-        "per_plan_node": true
+        "download_limit_mbps": 10,
+        "upload_limit_mbps": 10
       }
     }
   ]
