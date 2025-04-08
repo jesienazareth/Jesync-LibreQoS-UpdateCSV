@@ -1,19 +1,20 @@
 {
+  "scan_interval": 600,
   "routers": [
     {
-      "name": "Main Router",
-      "address": "192.168.88.1",
+      "name": "PPPoE-AC",
+      "address": "172.16.8.2",
       "port": 8728,
-      "username": "admin",
+      "username": "youruser",
       "password": "yourpassword",
       "parent_manual": true,
       "pppoe": {
         "enabled": true,
-        "per_plan_node": false
+        "per_plan_node": true,
+        "UseProfileBandwidth": true
       },
       "hotspot": {
-        "enabled": true,
-        "include_mac": true,
+        "enabled": false,
         "download_limit_mbps": 10,
         "upload_limit_mbps": 10
       }
